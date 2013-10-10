@@ -1,0 +1,23 @@
+These notes attempt to capture some of the techniques that experienced systems hackers use to
+make their lives easier, their development faster, and their programs better. In our journey, we
+will scrupuously avoid metrics, excessive formalism, and the traditional trappings of very largescale software engineering that are so often taught in undergraduate software engineering courses.
+While these techniques have their place and value, there is a middle ground of practical software
+engineering techniques that work well for programming in small groups—say, one to ﬁve people. We
+focus our attention on systems programming, the often low-level and intricate software development
+in operating systems, networks, compilers, and the other components that build the foundation of
+higher layer software systems.
+We will explore both practices and tools that facilitate software development. Our view of these
+tools is that they should be low-overhead. They should be easy to start using, provide signiﬁcant
+“bang for the buck,” and be capable of supporting a project if it grows. The beneﬁt from the practices
+should be clear and realizable without spending a lot of time on them.
+An important question to ask over time is how much time to spend learning new techniques. Our
+view is to take the middle road. Be willing to keep your knowledge of tools fresh. This process
+is one of balancing between expertise with your current tool set, avoiding fads, and learning useful
+new tools that can signiﬁcantly improve your productivity. Pick your tools carefully; most take
+some time to learn, and longer to become ﬂuent. The process is much like that of optimizing the
+performance of a program: identify the small set of things that consume the most time, and optimize
+those ﬁrst.
+This same guideline applies to the suggestions we make in this text. While we believe that nearly
+all of them apply to anyone doing systems programming, some of the details may not match your
+style. Approach the problem from a puzzle-solving standpoint: How can you optimize the amount
+of time you get to spend doing the things that you enjoy?

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en-US" class="dev-desktop uni-purple-border new-purple ua-wk ua-unknown ua-wk537  bkt900  uni-dark-purple" style="">
+<!-- m2 template  -->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+    <title>Yahoo!</title>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="A new welcome to Yahoo!. The new Yahoo! experience makes it easier to discover the news and information that you care about most. It's the web ordered for you.">
+    <meta name="keywords" content="yahoo, yahoo home page, yahoo homepage, yahoo search, yahoo mail, yahoo messenger, yahoo games, news, finance, sport, entertainment">
+    <meta property="og:title" content="Yahoo!" />
+    <meta property="og:type" content='website' />
+    <meta property="og:url" content="http://www.yahoo.com/" />
+    <meta property="og:description" content="A new welcome to Yahoo!. The new Yahoo! experience makes it easier to discover the news and information that you care about most. It's the web ordered for you."/>
+    <meta property="og:image" content="http://l.yimg.com/dh/ap/default/130215/y_200_a.png"/>
+    <meta property="og:site_name" content="Yahoo!" />
+    <meta property="fb:app_id" content="90376669494" />
+    
+        <script type="text/javascript">
+        //Roundtrip
+        rtTop = Number(new Date());
+
+        document.documentElement.className += ' jsenabled';
+    </script>
+
+    
+    <script type="text/javascript">
+    (function () {
+        //refresh check
+        var d=document,c=";\ "+d.cookie + ";",msc,i,re=false,rc=(c.indexOf("; CRFRSH=1")>=0),l="",n='0',b,lck='',fps,fpsVal,sw,loc=location,y;
+            if ((b=c.indexOf(' Y=v'))>=0) {
+                y=c.substring(b,c.indexOf(';',b))+'&';
+                if ((b=y.indexOf('l='))>=0) {
+                    l=y.substring(b+2,y.indexOf('&',b));
+                    if((b=y.indexOf('n='))>=0)n=y.substring(b+2,y.indexOf('&',b));
+                }
+                
+                if (lck!=l) {
+                    re=true;
+                }
+            }                  i=c.indexOf("; MSC=");
+            msc=c.substring(i+6,c.indexOf(';',i+2));
+            sc=msc.indexOf("mod=");
+            if (sc > -1){
+                re = true;
+                d.cookie="MSC=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=www.yahoo.com";
+            }            if (rc) {
+            d.cookie="CRFRSH=0; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=www.yahoo.com"; 
+        } else if (re) {
+            d.cookie = "CRFRSH=1; domain=www.yahoo.com";
+            d.write('<meta http-equiv="Expires" content="-1">');
+            loc.reload(true);
+        }
+    })();
+</script>
+
+
+    <script type="text/javascript">
+    (function () {
+        var cacheDNS, i, j;
+    
+        cacheDNS = function(i, j) {
+            var host, img;
+            
+        	host = 'l' + ((i > 0) ? i : '');
+        	img = new Image();
+        	img.id = host+'.yimg'+j;
+        	img.style.position = 'absolute';
+        	img.style.visibility = 'hidden';
+        	img.src = 'http://'+host+'.yimg.com/nn/lib/metro/p'+j+'.gif';
+    	}   
+    	 
+        for(j=1;j<=2;++j){
+        	for(i=0;i<=4;++i){
+        	    cacheDNS(i,j);
+        	}
+        }
+    })();
+</script>
+
+    <script>
+(function(){var k=13,d=4,j=0,a=document.documentElement,b=[a.className],f,c=navigator.plugins,g=k;if(c&&c.length){f=c["Shockwave Flash"];if(f&&f.description){j=parseInt(f.description.match(/\b(\d+)\.\d+\b/)[1],10)||0}}else{while(g--){try{new ActiveXObject("ShockwaveFlash.ShockwaveFlash."+g);j=g;break}catch(h){}}}b.push("flash-"+j);while(j-->d){b.push("flash-gt"+j)}a.className=b.join(" ")})();
+</script>
+    <script>
+(function(){var j=this,n=/^(on)?load/,b=/^on/,i="addEventListener",f="attachEvent",e="_oc",h="detachEvent",g="removeEventListener",l=j[i],m=j[g],p=j[f],a=j[h],k={},d=0;function c(r,s,q){if(!r||!s){return;}if(n.test(r)){if(!s[e]){var t=++d;s[e]=t;k[t]=s;}}else{if(p&&b.test(r)){p(r,s);}else{if(l){l(r,s,q);}}}}function o(r,s,q){if(!r||!s){return;}if(n.test(r)){var t=s[e];if(t){delete k[t];}}el
