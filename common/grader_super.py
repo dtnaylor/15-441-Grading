@@ -14,11 +14,11 @@ from plcommon import check_output, check_both
 import unittest
 from pygit2 import Blob, Tree, Repository, Tag
 
+import resource
+resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
 
 ROOT_REPO_TEMPLATE = '/afs/andrew/course/15/441-641/%s/%s-15-441-project-1'
-#ROOT_REPO_TEMPLATE = '/afs/andrew/course/15/441-641/%s/%s-15-441-project-1/project1_cp1_starter'
 REPO_TEMPLATE = '%s-15-441-project-1'
-#REPO_TEMPLATE = 'project1_cp1_starter'
 
 # paths to *original* resources; will be copied to tmp_dir
 PRIV_KEY = os.path.join(os.getcwd(), '../common/grader.key')
@@ -48,6 +48,9 @@ class Project1Test(unittest.TestCase):
         self.repository = Repository('.git')
         self.ran = False
         self.port = random.randint(1025, 9999)
+        self.tlsport = random.randint(1025, 9999)
+        print 'Using ports: %d,%d' % (self.port, self.tlsport)
+
 
     def pAssertEqual(self, arg1, arg2):
         try:
@@ -70,12 +73,12 @@ class Project1Test(unittest.TestCase):
     def edit_notes(self, new_note):
         notef = self.grader.notes
         try:
-            check_both('cat %s' % (notef))
+            check_both('cat %s' % (notef), False)
             new_note = '\n'+new_note
         except:
             pass
-        check_both('echo "%s" >> %s' % (new_note, notef))
-        self.pAssertEqual(0, check_call([self.grader.editor, notef]))
+        check_both('echo "%s\nGood." >> %s' % (new_note, notef), False)
+        check_both('%s %s' % (self.grader.editor,notef))
 
     def confirm(self):
         print '-----------------------------------------------'
@@ -149,18 +152,12 @@ class Project1Test(unittest.TestCase):
         if not path: path = self.find_path('Makefile', tree)
         print 'switching to: %s' % path
         os.chdir(path)
-        #check_call(['bash'])
         check_both('make clean', False, False)
         check_output('make')
-        #check_output('cp -r /tmp/cp2/www/* ./tmp/www')
-        cmd = 'nohup %s %d 4443 %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
-        #cmd = 'nohup %s %d %slisod.log %s&' % (liso, port, self.grader.tmp_dir, self.grader.www)
-        #cmd = 'nohup %s %d 4443 %slisod.log %slisod.lock %s&' % (liso, port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www)
-        #cmd = 'nohup %s %d %slisod.log &' % (liso, port, self.grader.tmp_dir)
-        print cmd
-        self.pAssertEqual(0, os.system(cmd))
-        #check_both(cmd)
         self.ran = True
+        resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
+        cmd = 'nohup %s %d 4443 %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
+        self.pAssertEqual(0, os.system(cmd))
         return liso
 
     def git_clone(self, repourl):
@@ -178,7 +175,10 @@ class Project1Test(unittest.TestCase):
         try:
             tag = self.repository.lookup_reference('refs/tags/checkpoint-%d' % self.grader.cp_num)
         except KeyError:
-            tag = self.repository.lookup_reference('refs/tags/checkpoint_%d' % self.grader.cp_num)
+            try:
+                tag = self.repository.lookup_reference('refs/tags/checkpoint_%d' % self.grader.cp_num)
+            except KeyError:
+                tag = self.repository.lookup_reference('refs/tags/checkpoint%d' % self.grader.cp_num)
         commit = self.repository[tag.target]
         while isinstance(commit, Tag): commit = self.repository[commit.target]
         return commit
@@ -186,16 +186,12 @@ class Project1Test(unittest.TestCase):
     # test existence of tag in repo
     def test_tag_checkpoint(self):
         self.print_str('\n\n----- Testing Tag -----')
-        try:
-            self.repository.lookup_reference('refs/tags/checkpoint-%d' % self.grader.cp_num)
-        except KeyError:
-            self.repository.lookup_reference('refs/tags/checkpoint_%d' % self.grader.cp_num)
+        self.repository.lookup_reference('refs/tags/checkpoint-%d' % self.grader.cp_num)
 
     # test turn in timestamp
     def test_timestamp(self):
         self.print_str('\n\n----- Testing Timestamp -----')
         commit = self.resolve_tag()
-        #self.print_str('ref/tags/checkpoint-%d: %s' % (self.grader.cp_num, commit.hex))
         self.print_str('ref/tags/checkpoint-%d: %s' % (self.grader.cp_num, commit.hex))
         self.print_str('Due: %s' % self.grader.due_date)
         utctime = datetime.datetime.utcfromtimestamp(commit.commit_time)
@@ -216,9 +212,8 @@ class Project1Test(unittest.TestCase):
         print '\n----- readme.txt -----'
         readme = self.find_file('readme.txt', tree)
         print readme.data,
-        raw_input()
-        self.edit_notes('README:')
         self.confirm()
+        self.edit_notes('README:')
 
     # test vulnerabilities.txt up to snuff
     def test_vulnerabilities_file(self):
@@ -228,9 +223,8 @@ class Project1Test(unittest.TestCase):
         print '\n----- vulnerabilities.txt -----'
         vulnerable = self.find_file('vulnerabilities.txt', tree)
         print vulnerable.data,
-        raw_input()
-        self.edit_notes('VULNERABILITIES:')
         self.confirm()
+        self.edit_notes('VULNERABILITIES:')
 
     # test tests.txt up to snuff
     def test_tests_file(self):
@@ -240,9 +234,8 @@ class Project1Test(unittest.TestCase):
         print '\n----- tests.txt -----'
         tests = self.find_file('tests.txt', tree)
         print tests.data,
-        raw_input()
-        self.edit_notes('TESTS:')
         self.confirm()
+        self.edit_notes('TESTS:')
 
     # test Makefile up to snuff
     def test_Makefile_file(self):
@@ -252,9 +245,8 @@ class Project1Test(unittest.TestCase):
         print '\n----- Makefile -----'
         Makefile = self.find_file('Makefile', tree)
         print Makefile.data,
-        raw_input()
-        self.edit_notes('MAKEFILE:')
         self.confirm()
+        self.edit_notes('MAKEFILE:')
 
     # test if source up to snuff
     def test_inspect_source(self):
@@ -274,7 +266,6 @@ class Project1Test(unittest.TestCase):
         path = self.get_path()
         if not path: path = self.find_path('Makefile', commit.tree)
         os.chdir(path)
-        #check_call(['bash'])
         check_output('make')
         self.pAssertTrue(os.path.exists('./lisod'))
 
@@ -291,21 +282,30 @@ class Project1Test(unittest.TestCase):
         if not os.path.exists(replays_dir):
             os.makedirs(replays_dir)
         files = os.listdir(replays_dir)
+        num_passed = 0
+        num_files = 0
         for fname in files:
             basename, extension = os.path.splitext(fname)
             if extension == '.test': 
+                num_files += 1
+                self.print_str('testing %s...' % fname)
                 fname = os.path.join(self.grader.tmp_dir + 'replays', fname)
                 outfile = os.path.join(self.grader.tmp_dir + 'replays', '%s_%s.out' % (basename, self.repo))
                 command = 'ncat -i 1s localhost %d < %s > %s' % (self.port, fname, outfile)
 
-                print 'Test: %s' % command
-                self.pAssertEqual(256, os.system(command))
+                check_both(command, False, False)
                 with open(os.path.join(self.grader.tmp_dir + 'replays', basename+'.out')) as f:
                     with open(outfile) as f2:
                         outhash = hashlib.sha256(f.read()).hexdigest()
                         out2hash = hashlib.sha256(f2.read()).hexdigest()
-                        self.pAssertEqual(outhash, out2hash)
+                        if outhash == out2hash:
+                            self.print_str('ok')
+                            num_passed += 1
+                        else:
+                            self.print_str('failed')
                 check_both('rm %s' % outfile)
+        self.print_str('passed %d of %d' % (num_passed, num_files))
+        self.pAssertEqual(num_passed,num_files)
 
     def tearDown(self):
         os.chdir(self.grader.tmp_dir)
@@ -319,14 +319,15 @@ class Project1Test(unittest.TestCase):
         if self.ran:
             print 'trying "killall %s"' % os.path.basename(self.liso_name)
             check_both('killall %s' % os.path.basename(self.liso_name), True, False)
-
+            check_both('rm /tmp/lisod.log', True, False)
+            check_both('rm /tmp/lisod.lock', True, False)
+            #check_both('sudo /etc/init.d/networking restart')
 
 class Project1Grader(object):
     def __init__(self, andrewid, cp_num, due_date, source_reminder):
         self.andrewid = andrewid
         self.cp_num = cp_num
         self.root_repo = ROOT_REPO_TEMPLATE % (andrewid, andrewid)
-        #self.root_repo = ROOT_REPO_TEMPLATE % (andrewid)
         self.tmp_dir = '/tmp/cp%d/' % self.cp_num
         self.due_date = due_date
         self.source_reminder = source_reminder
