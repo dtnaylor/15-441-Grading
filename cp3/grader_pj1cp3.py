@@ -46,7 +46,7 @@ class Checkpoint3Test(Project1Test):
         #         f1.write(test.data)
         #         f2.write(out.data)
 
-    def check_headers(self, response_type, headers, length_content, ext):
+    def check_headers(self, response_type, headers, length_content, ext):   # from david cp2
         self.assertEqual(headers['Server'].lower(), 'liso/1.0')
 
         try:
@@ -55,7 +55,7 @@ class Checkpoint3Test(Project1Test):
             print >> sys.stderr, 'Bad Date header: %s' % (headers['Date'])
         
         self.assertEqual(int(headers['Content-Length']), length_content)
-        self.assertEqual(headers['Connection'].lower(), 'close')
+        #self.assertEqual(headers['Connection'].lower(), 'close')
 
         if response_type == 'GET' or response_type == 'HEAD':
             header_set = set(['connection', 'content-length',
@@ -77,96 +77,110 @@ class Checkpoint3Test(Project1Test):
             self.assertEqual(set(), header_set - set(headers.keys()))
         else:
             self.fail('Unsupported Response Type...')
-
-    def test_HEAD(self):
-        print '----- Testing HEAD -----'
+    
+    
+    def test_headers(self):  # from david cp2
+        self.print_str('----- Testing Headers -----')
         tests = {
             'http://127.0.0.1:%d/index.html' : 
             ('f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd', 802),
             'http://127.0.0.1:%d/images/liso_header.png' :
             ('abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786', 17431),
-            'http://127.0.0.1:%d/readme' :
-            ('5d4b6498d1d555b631c1c7b005144376dacb33eb99dc586b78297ade1eded9a3', 5154304),
             'http://127.0.0.1:%d/style.css' :
             ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
                 }
-        global repo
         commit = self.resolve_tag()
         self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
-        port = self.request_port()
         for test in tests:
             root,ext = os.path.splitext(test)
-            response = requests.head(test % port, timeout=10.0)
-            contenthash = hashlib.sha256(response.content).hexdigest()
-            self.assertEqual(200, response.status_code)
+            response = requests.head(test % self.port, timeout=10.0)
             self.check_headers(response.request.method,
                                response.headers,
                                tests[test][1],
                                ext)
-        self.confirm()
-        self.edit_notes()
-
-    def test_GET(self):
-        print '----- Testing GET -----'
+    
+    def test_HEAD(self):  # from david cp2
+        self.print_str('----- Testing HEAD -----')
         tests = {
             'http://127.0.0.1:%d/index.html' : 
-            'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
+            ('f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd', 802),
             'http://127.0.0.1:%d/images/liso_header.png' :
-            'abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786',
-            'http://127.0.0.1:%d/readme' :
-            '5d4b6498d1d555b631c1c7b005144376dacb33eb99dc586b78297ade1eded9a3',
+            ('abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786', 17431),
             'http://127.0.0.1:%d/style.css' :
-            '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
+            ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
                 }
-        global repo
         commit = self.resolve_tag()
         self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
-        port = self.request_port()
         for test in tests:
             root,ext = os.path.splitext(test)
-            response = requests.get(test % port, timeout=10.0)
+            response = requests.head(test % self.port, timeout=10.0)
             contenthash = hashlib.sha256(response.content).hexdigest()
-            self.assertEqual(200, response.status_code)
-            self.assertEqual(contenthash, tests[test])
-            self.check_headers(response.request.method,
-                               response.headers,
-                               len(response.content),
-                               ext)
-        self.confirm()
-        self.edit_notes()
+            self.pAssertEqual(200, response.status_code)
+            #self.check_headers(response.request.method,
+            #                   response.headers,
+            #                   tests[test][1],
+            #                   ext)
 
-    def test_POST(self):
-        print '----- Testing POST -----'
+    
+    def test_GET(self):  # from david cp2
+        self.print_str('----- Testing GET -----')
         tests = {
             'http://127.0.0.1:%d/index.html' : 
             'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
             'http://127.0.0.1:%d/images/liso_header.png' :
             'abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786',
-            'http://127.0.0.1:%d/readme' :
-            '5d4b6498d1d555b631c1c7b005144376dacb33eb99dc586b78297ade1eded9a3',
             'http://127.0.0.1:%d/style.css' :
             '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
                 }
-        global repo
         commit = self.resolve_tag()
         self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
-        port = self.request_port()
         for test in tests:
             root,ext = os.path.splitext(test)
-            response = requests.post(test % port, timeout=10.0)
-            self.assertEqual(200, response.status_code)
-            self.check_headers(response.request.method,
-                               response.headers,
-                               len(response.content),
-                               ext)
-        self.confirm()
-        self.edit_notes()
+            response = requests.get(test % self.port, timeout=10.0)
+            contenthash = hashlib.sha256(response.content).hexdigest()
+            self.pAssertEqual(200, response.status_code)
+            self.pAssertEqual(contenthash, tests[test])
+            #self.check_headers(response.request.method,
+            #                   response.headers,
+            #                   len(response.content),
+            #                   ext)
+
+    def test_POST(self):  # from david cp2
+        self.print_str('----- Testing POST -----')
+        tests = {
+            'http://127.0.0.1:%d/index.html' : 
+            'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
+                }
+        commit = self.resolve_tag()
+        self.git_checkout(commit.hex)
+        name = self.run_lisod(commit.tree)
+        time.sleep(3)
+        for test in tests:
+            root,ext = os.path.splitext(test)
+            # for checkpoint 2, this should time out; we told them to swallow the data and ignore
+            try:
+                response = requests.post(test % self.port, data='dummy data', timeout=3.0)
+            #except requests.exceptions.Timeout:
+            except requests.exceptions.RequestException:
+                print 'timeout'
+                continue
+            except socket.timeout:
+                print 'socket.timeout'
+                continue
+
+            # if they do return something, make sure it's OK
+            self.pAssertEqual(200, response.status_code)
+            #self.check_headers(response.request.method,
+            #                   response.headers,
+            #                   len(response.content),
+            #                   ext)
+
        
     def test_browserTLS(self):
         print '----- Testing TLS Browser -----'
@@ -217,15 +231,15 @@ class Checkpoint3Test(Project1Test):
         self.confirm()
         self.edit_notes()
 
-    def test_bw(self):
-        print '----- Testing BW -----'
-        global repo
+    def test_bw(self):  # from david cp2
+        print '(----- Testing BW -----'
+        check_output('echo "----- Testing BW ----" >> %s' % self.grader.results)
         commit = self.resolve_tag()
         self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
-        port = self.request_port()
-        self.assertEqual(0, os.system('wget http://127.0.0.1:%d/bw.test -O /dev/null >> /tmp/%s_notes.txt' % (port, repo)))
+        #self.pAssertEqual(0, os.system('wget http://127.0.0.1:%d/big.html -O /dev/null >> %s' % (self.port, self.grader.results)))
+        self.pAssertEqual(0, os.system('curl -m 10 -o /dev/null http://127.0.0.1:%d/big.html 2>> %s' % (self.port, self.grader.results)))
 
     def test_pipeliningTLS(self):
         print '----- Testing TLS pipelining -----'
@@ -309,6 +323,7 @@ class Checkpoint3Grader(Project1Grader):
     def prepareTestSuit(self):
         super(Checkpoint3Grader, self).prepareTestSuit()
         self.suite.addTest(GradeCheckpoint3('test_replay_files'))
+        self.suite.addTest(GradeCheckpoint3('test_headers'))
         self.suite.addTest(GradeCheckpoint3('test_HEAD'))
         self.suite.addTest(GradeCheckpoint3('test_GET'))
         self.suite.addTest(GradeCheckpoint3('test_POST'))
