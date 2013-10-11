@@ -46,6 +46,8 @@ class Project1Test(unittest.TestCase):
         self.git_clone(self.grader.root_repo)
         os.chdir(self.repo)
         self.repository = Repository('.git')
+        commit = self.resolve_tag()
+        self.git_checkout(commit.hex)
         self.ran = False
         self.port = random.randint(1025, 9999)
         self.tlsport = random.randint(1025, 9999)
@@ -252,8 +254,6 @@ class Project1Test(unittest.TestCase):
     def test_inspect_source(self):
         self.print_str('\n\n----- Inspect Source cod *.[c|h] -----')
         self.print_str(self.grader.source_reminder)
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         self.pAssertEqual(0, check_call(['bash']))
         self.confirm()
         self.edit_notes('SOURCE:')
@@ -261,8 +261,6 @@ class Project1Test(unittest.TestCase):
     # tests if make properly creates lisod...
     def test_lisod_file(self):
         self.print_str('\n\n----- Testing make -----')
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         path = self.get_path()
         if not path: path = self.find_path('Makefile', commit.tree)
         os.chdir(path)
@@ -274,8 +272,6 @@ class Project1Test(unittest.TestCase):
     # check sha's of output
     def test_replays(self):
         self.print_str('\n\n----- Testing Replays -----')
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         self.run_lisod(commit.tree)
         time.sleep(3)
         replays_dir = os.path.join(self.grader.tmp_dir, 'replays')
@@ -354,14 +350,14 @@ class Project1Grader(object):
     def prepareTestSuite(self):
     
         self.suite = unittest.TestSuite()
-        self.suite.addTest(Project1Test('test_tag_checkpoint', self))
-        self.suite.addTest(Project1Test('test_timestamp', self))
-        self.suite.addTest(Project1Test('test_readme_file', self))
-        self.suite.addTest(Project1Test('test_tests_file', self))
-        self.suite.addTest(Project1Test('test_vulnerabilities_file', self))
-        self.suite.addTest(Project1Test('test_Makefile_file', self))
-        self.suite.addTest(Project1Test('test_inspect_source', self))
-        self.suite.addTest(Project1Test('test_lisod_file', self))
+        #self.suite.addTest(Project1Test('test_tag_checkpoint', self))
+        #self.suite.addTest(Project1Test('test_timestamp', self))
+        #self.suite.addTest(Project1Test('test_readme_file', self))
+        #self.suite.addTest(Project1Test('test_tests_file', self))
+        #self.suite.addTest(Project1Test('test_vulnerabilities_file', self))
+        #self.suite.addTest(Project1Test('test_Makefile_file', self))
+        #self.suite.addTest(Project1Test('test_inspect_source', self))
+        #self.suite.addTest(Project1Test('test_lisod_file', self))
         #self.suite.addTest(Project1Test('test_replays', self))
 
     def runTests(self):

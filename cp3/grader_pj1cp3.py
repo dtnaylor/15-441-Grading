@@ -30,6 +30,19 @@ MIME = {
 
 class Checkpoint3Test(Project1Test):
 
+
+    def setUp(self):
+        super(Checkpoint3Test, self).setUp()
+
+        # save a copy of src for moss
+        if not os.path.exists(self.grader.moss_dir):
+            os.makedirs(self.grader.moss_dir)
+        if not os.path.exists('%s/%s' % (self.grader.moss_dir, self.grader.andrewid)):
+            print 'Saving copy of source for moss in %s/%s' % (self.grader.moss_dir, self.grader.andrewid)
+            os.makedirs('%s/%s' % (self.grader.moss_dir, self.grader.andrewid))
+            check_output('cp -r . %s/%s/' % (self.grader.moss_dir, self.grader.andrewid))
+
+
     # test replay.test and replay.out up to snuff
     def test_replay_files(self):
         print '\n\n----- Testing replay.[test|out] files -----'
@@ -89,8 +102,6 @@ class Checkpoint3Test(Project1Test):
             'http://127.0.0.1:%d/style.css' :
             ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
                 }
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         for test in tests:
@@ -111,8 +122,6 @@ class Checkpoint3Test(Project1Test):
             'http://127.0.0.1:%d/style.css' :
             ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
                 }
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         for test in tests:
@@ -136,8 +145,6 @@ class Checkpoint3Test(Project1Test):
             'http://127.0.0.1:%d/style.css' :
             '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
                 }
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         for test in tests:
@@ -157,8 +164,6 @@ class Checkpoint3Test(Project1Test):
             'http://127.0.0.1:%d/index.html' : 
             'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
                 }
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         for test in tests:
@@ -185,8 +190,6 @@ class Checkpoint3Test(Project1Test):
     def test_browserTLS(self):
         print '----- Testing TLS Browser -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_tlsport()
@@ -198,8 +201,6 @@ class Checkpoint3Test(Project1Test):
     def test_browser(self):
         print '----- Testing Browser -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -210,8 +211,6 @@ class Checkpoint3Test(Project1Test):
     def test_blog(self):
         print '----- Testing Blog -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -222,8 +221,6 @@ class Checkpoint3Test(Project1Test):
     def test_cgi(self):
         print '----- Testing CGI -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod_cgitest(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -234,8 +231,6 @@ class Checkpoint3Test(Project1Test):
     def test_bw(self):  # from david cp2
         print '(----- Testing BW -----'
         check_output('echo "----- Testing BW ----" >> %s' % self.grader.results)
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         #self.pAssertEqual(0, os.system('wget http://127.0.0.1:%d/big.html -O /dev/null >> %s' % (self.port, self.grader.results)))
@@ -244,8 +239,6 @@ class Checkpoint3Test(Project1Test):
     def test_pipeliningTLS(self):
         print '----- Testing TLS pipelining -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_tlsport()
@@ -256,8 +249,6 @@ class Checkpoint3Test(Project1Test):
     def test_pipelining(self):
         print '----- Testing pipelining -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -279,8 +270,6 @@ class Checkpoint3Test(Project1Test):
             '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
                 }
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -294,8 +283,6 @@ class Checkpoint3Test(Project1Test):
     def test_invalidLENGTH(self):
         print '----- Testing Bad Length Post -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -305,8 +292,6 @@ class Checkpoint3Test(Project1Test):
     def test_invalidEND(self):
         print '----- Testing Bad Ending GET -----'
         global repo
-        commit = self.resolve_tag()
-        self.git_checkout(commit.hex)
         name = self.run_lisod(commit.tree)
         time.sleep(3)
         port = self.request_port()
@@ -318,25 +303,26 @@ class Checkpoint3Grader(Project1Grader):
     def __init__(self, andrewid):
         super(Checkpoint3Grader, self).__init__(andrewid, 3, DUE_DATE, SOURCE_REMINDER)
         self.editor = 'emacs -nw'
+        self.moss_dir = os.path.join(self.tmp_dir, 'moss')
 
 
-    def prepareTestSuit(self):
-        super(Checkpoint3Grader, self).prepareTestSuit()
-        self.suite.addTest(GradeCheckpoint3('test_replay_files'))
-        self.suite.addTest(GradeCheckpoint3('test_headers'))
-        self.suite.addTest(GradeCheckpoint3('test_HEAD'))
-        self.suite.addTest(GradeCheckpoint3('test_GET'))
-        self.suite.addTest(GradeCheckpoint3('test_POST'))
-        self.suite.addTest(GradeCheckpoint3('test_pipelining'))
-        self.suite.addTest(GradeCheckpoint3('test_pipeliningTLS'))
-        self.suite.addTest(GradeCheckpoint3('test_browserTLS'))
-        self.suite.addTest(GradeCheckpoint3('test_invalidPUT'))
-        self.suite.addTest(GradeCheckpoint3('test_invalidLENGTH'))
-        self.suite.addTest(GradeCheckpoint3('test_invalidEND'))
-        self.suite.addTest(GradeCheckpoint3('test_browser'))
-        self.suite.addTest(GradeCheckpoint3('test_cgi'))
-        self.suite.addTest(GradeCheckpoint3('test_blog'))
-        self.suite.addTest(GradeCheckpoint3('test_bw'))
+    def prepareTestSuite(self):
+        super(Checkpoint3Grader, self).prepareTestSuite()
+        #self.suite.addTest(Checkpoint3Test('test_replay_files', self))
+        #self.suite.addTest(Checkpoint3Test('test_headers', self))
+        #self.suite.addTest(Checkpoint3Test('test_HEAD', self))
+        self.suite.addTest(Checkpoint3Test('test_GET', self))
+        self.suite.addTest(Checkpoint3Test('test_POST', self))
+        #self.suite.addTest(Checkpoint3Test('test_pipelining', self))
+        #self.suite.addTest(Checkpoint3Test('test_pipeliningTLS', self))
+        #self.suite.addTest(Checkpoint3Test('test_browserTLS', self))
+        #self.suite.addTest(Checkpoint3Test('test_invalidPUT', self))
+        #self.suite.addTest(Checkpoint3Test('test_invalidLENGTH', self))
+        #self.suite.addTest(Checkpoint3Test('test_invalidEND', self))
+        #self.suite.addTest(Checkpoint3Test('test_browser', self))
+        #self.suite.addTest(Checkpoint3Test('test_cgi', self))
+        #self.suite.addTest(Checkpoint3Test('test_blog', self))
+        #self.suite.addTest(Checkpoint3Test('test_bw', self))
 
 
 if __name__ == '__main__':
