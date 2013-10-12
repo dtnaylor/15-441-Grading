@@ -19,15 +19,6 @@ SOURCE_REMINDER = '''\n\n(1) Ensure OpenSSL, fork, execve\n
 (2) Check documentation\n
 (3) Check readability/modularity'''
 
-MIME = {
-            '.html' : 'text/html',
-            '.css'  : 'text/css',
-            '.png'  : 'image/png',
-            '.jpg'  : 'image/jpeg',
-            '.gif'  : 'image/gif',
-            ''      : 'application/octet-stream'
-       }
-
 class Checkpoint3Test(Project1Test):
 
 
@@ -42,220 +33,45 @@ class Checkpoint3Test(Project1Test):
             os.makedirs('%s/%s' % (self.grader.moss_dir, self.grader.andrewid))
             check_output('cp -r . %s/%s/' % (self.grader.moss_dir, self.grader.andrewid))
 
-
-    # test replay.test and replay.out up to snuff
-    def test_replay_files(self):
-        print '\n\n----- Testing replay.[test|out] files -----'
+    def lisod_start(self):
         commit = self.resolve_tag()
-        tree = commit.tree
-        print '\n----- replay.test -----'
-        test = self.find_file('replay.test', tree)
-        out = self.find_file('replay.out', tree)
-        print test.data.replace('\n','\\n\n').replace('\r','\\r'),
-        print '\n----- replay.out -----'
-       	print out.data.replace('\n','\\n\n').replace('\r','\\r'),
-        # with open('/tmp/replays/%s.test' % repo,'w') as f1:
-        #     with open('/tmp/replays/%s.out' % repo,'w') as f2:
-        #         f1.write(test.data)
-        #         f2.write(out.data)
-
-    def check_headers(self, response_type, headers, length_content, ext):   # from david cp2
-        self.assertEqual(headers['Server'].lower(), 'liso/1.0')
-
-        try:
-            datetime.datetime.strptime(headers['Date'], '%a, %d %b %Y %H:%M:%S %Z')
-        except:
-            print >> sys.stderr, 'Bad Date header: %s' % (headers['Date'])
+        name = self.run_lisod(commit.tree)
+        time.sleep(3)
         
-        self.assertEqual(int(headers['Content-Length']), length_content)
-        #self.assertEqual(headers['Connection'].lower(), 'close')
-
-        if response_type == 'GET' or response_type == 'HEAD':
-            header_set = set(['connection', 'content-length',
-                              'date', 'last-modified',
-                              'server', 'content-type'])
-            self.assertEqual(set(), header_set - set(headers.keys()))
-            if headers['Content-Type'].lower() != MIME[ext]:
-                print 'MIME got %s expected %s' % (headers['Content-Type'].lower(), MIME[ext])
-            self.assertTrue(headers['Content-Type'].lower() == MIME[ext] or
-                            headers['Content-Type'].lower() == MIME['.html'])
-
-            try:
-                datetime.datetime.strptime(headers['Last-Modified'], '%a, %d %b %Y %H:%M:%S %Z')
-            except:
-                print >> sys.stderr, 'Bad Last-Modified header: %s' % (headers['Last-Modified'])
-        elif response_type == 'POST':
-            header_set = set(['connection', 'content-length',
-                              'date', 'server'])
-            self.assertEqual(set(), header_set - set(headers.keys()))
-        else:
-            self.fail('Unsupported Response Type...')
-    
-    
-    def test_headers(self):  # from david cp2
-        self.print_str('----- Testing Headers -----')
-        tests = {
-            'http://127.0.0.1:%d/index.html' : 
-            ('f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd', 802),
-            'http://127.0.0.1:%d/images/liso_header.png' :
-            ('abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786', 17431),
-            'http://127.0.0.1:%d/style.css' :
-            ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
-                }
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        for test in tests:
-            root,ext = os.path.splitext(test)
-            response = requests.head(test % self.port, timeout=10.0)
-            self.check_headers(response.request.method,
-                               response.headers,
-                               tests[test][1],
-                               ext)
-    
-    def test_HEAD(self):  # from david cp2
-        self.print_str('----- Testing HEAD -----')
-        tests = {
-            'http://127.0.0.1:%d/index.html' : 
-            ('f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd', 802),
-            'http://127.0.0.1:%d/images/liso_header.png' :
-            ('abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786', 17431),
-            'http://127.0.0.1:%d/style.css' :
-            ('575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a', 301)
-                }
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        for test in tests:
-            root,ext = os.path.splitext(test)
-            response = requests.head(test % self.port, timeout=10.0)
-            contenthash = hashlib.sha256(response.content).hexdigest()
-            self.pAssertEqual(200, response.status_code)
-            #self.check_headers(response.request.method,
-            #                   response.headers,
-            #                   tests[test][1],
-            #                   ext)
-
-    
-    def test_GET(self):  # from david cp2
-        self.print_str('----- Testing GET -----')
-        tests = {
-            'http://127.0.0.1:%d/index.html' : 
-            'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
-            'http://127.0.0.1:%d/images/liso_header.png' :
-            'abf1a740b8951ae46212eb0b61a20c403c92b45ed447fe1143264c637c2e0786',
-            'http://127.0.0.1:%d/style.css' :
-            '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
-                }
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        for test in tests:
-            root,ext = os.path.splitext(test)
-            response = requests.get(test % self.port, timeout=10.0)
-            contenthash = hashlib.sha256(response.content).hexdigest()
-            self.pAssertEqual(200, response.status_code)
-            self.pAssertEqual(contenthash, tests[test])
-            #self.check_headers(response.request.method,
-            #                   response.headers,
-            #                   len(response.content),
-            #                   ext)
-
-    def test_POST(self):  # from david cp2
-        self.print_str('----- Testing POST -----')
-        tests = {
-            'http://127.0.0.1:%d/index.html' : 
-            'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
-                }
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        for test in tests:
-            root,ext = os.path.splitext(test)
-            # for checkpoint 2, this should time out; we told them to swallow the data and ignore
-            try:
-                response = requests.post(test % self.port, data='dummy data', timeout=3.0)
-            #except requests.exceptions.Timeout:
-            except requests.exceptions.RequestException:
-                print 'timeout'
-                continue
-            except socket.timeout:
-                print 'socket.timeout'
-                continue
-
-            # if they do return something, make sure it's OK
-            self.pAssertEqual(200, response.status_code)
-            #self.check_headers(response.request.method,
-            #                   response.headers,
-            #                   len(response.content),
-            #                   ext)
-
        
     def test_browserTLS(self):
         print '----- Testing TLS Browser -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_tlsport()
-        check_call(['google-chrome', 'https://127.0.0.1:%d/index.html' % (port)])
+        self.lisod_start()
+        check_call(['firefox', 'https://127.0.0.1:%d/index.html' % (self.grader.tls_port)])
         self.confirm()
-        self.edit_notes()
+        self.edit_notes('TLS BROWSER:')
 
-
-    def test_browser(self):
-        print '----- Testing Browser -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        check_call(['google-chrome', 'http://127.0.0.1:%d/index.html' % (port)])
-        self.confirm()
-        self.edit_notes()
 
     def test_blog(self):
         print '----- Testing Blog -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        check_call(['google-chrome', 'http://127.0.0.1:%d/cgi/' % (port)])
+        self.lisod_start()
+        check_call(['firefox', 'http://127.0.0.1:%d/cgi/' % (self.grader.port)])
         self.confirm()
-        self.edit_notes()
+        self.edit_notes('BLOG TEST:')
 
     def test_cgi(self):
         print '----- Testing CGI -----'
-        global repo
-        name = self.run_lisod_cgitest(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        check_call(['google-chrome', 'http://127.0.0.1:%d/cgi/' % (port)])
+        self.lisod_start()
+        check_call(['firefox', 'http://127.0.0.1:%d/cgi/' % (self.grader.port)])
         self.confirm()
-        self.edit_notes()
-
-    def test_bw(self):  # from david cp2
-        print '(----- Testing BW -----'
-        check_output('echo "----- Testing BW ----" >> %s' % self.grader.results)
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        #self.pAssertEqual(0, os.system('wget http://127.0.0.1:%d/big.html -O /dev/null >> %s' % (self.port, self.grader.results)))
-        self.pAssertEqual(0, os.system('curl -m 10 -o /dev/null http://127.0.0.1:%d/big.html 2>> %s' % (self.port, self.grader.results)))
+        self.edit_notes('CGI TEST:')
 
     def test_pipeliningTLS(self):
         print '----- Testing TLS pipelining -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_tlsport()
-        cmd = 'ncat --ssl -i 1s 127.0.0.1 %d < /home/wolf/Dropbox/CMU/TA/15-441/Grading/project1/cp3/pipelining.get'
-        self.confirm()
-        self.assertEqual(512, os.system(cmd % (port)))
+        self.lisod_start()
+        cmd = 'ncat --ssl -i 1s 127.0.0.1 %d < ./pipelining.get'
+        self.assertEqual(512, os.system(cmd % (self.grader.tls_port)))
 
     def test_pipelining(self):
         print '----- Testing pipelining -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < /home/wolf/Dropbox/CMU/TA/15-441/Grading/project1/cp3/pipelining.get'
-        self.confirm()
-        self.assertEqual(512, os.system(cmd % (port)))
-        self.edit_notes()
+        self.lisod_start()
+        cmd = 'ncat -i 1s 127.0.0.1 %d < ./pipelining.get'
+        self.assertEqual(512, os.system(cmd % (self.grader.port)))
 
     def test_invalidPUT(self):
         print '----- Testing Bad PUT -----'
@@ -269,34 +85,23 @@ class Checkpoint3Test(Project1Test):
             'http://127.0.0.1:%d/style.css' :
             '575150c0258a3016223dd99bd46e203a820eef4f6f5486f7789eb7076e46736a'
                 }
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
+        self.lisod_start()
         for test in tests:
             root,ext = os.path.splitext(test)
-            response = requests.put(test % port, timeout=10.0)
+            response = requests.put(test % self.grader.port, timeout=10.0)
             self.assertEqual(501, response.status_code)
-        self.confirm()
-        self.edit_notes()
 
     def test_invalidLENGTH(self):
         print '----- Testing Bad Length Post -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < /home/wolf/Dropbox/CMU/TA/15-441/Grading/project1/cp3/bad.post'
-        self.assertEqual(512, os.system(cmd % (port)))
+        self.lisod_start()
+        cmd = 'ncat -i 1s 127.0.0.1 %d < ./bad.post'
+        self.assertEqual(512, os.system(cmd % (self.grader.port)))
 
     def test_invalidEND(self):
         print '----- Testing Bad Ending GET -----'
-        global repo
-        name = self.run_lisod(commit.tree)
-        time.sleep(3)
-        port = self.request_port()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < /home/wolf/Dropbox/CMU/TA/15-441/Grading/project1/cp3/bad.get'
-        self.assertEqual(256, os.system(cmd % (port)))
+        self.lisod_start()
+        cmd = 'ncat -i 1s 127.0.0.1 %d < ./bad.get'
+        self.assertEqual(256, os.system(cmd % (self.grader.port)))
 
 
 class Checkpoint3Grader(Project1Grader):
@@ -307,12 +112,12 @@ class Checkpoint3Grader(Project1Grader):
 
 
     def prepareTestSuite(self):
-        super(Checkpoint3Grader, self).prepareTestSuite()
+        #super(Checkpoint3Grader, self).prepareTestSuite()
         #self.suite.addTest(Checkpoint3Test('test_replay_files', self))
         #self.suite.addTest(Checkpoint3Test('test_headers', self))
         #self.suite.addTest(Checkpoint3Test('test_HEAD', self))
-        self.suite.addTest(Checkpoint3Test('test_GET', self))
-        self.suite.addTest(Checkpoint3Test('test_POST', self))
+        # self.suite.addTest(Checkpoint3Test('test_GET', self))
+        # self.suite.addTest(Checkpoint3Test('test_POST', self))
         #self.suite.addTest(Checkpoint3Test('test_pipelining', self))
         #self.suite.addTest(Checkpoint3Test('test_pipeliningTLS', self))
         #self.suite.addTest(Checkpoint3Test('test_browserTLS', self))

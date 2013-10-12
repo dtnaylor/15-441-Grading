@@ -51,7 +51,7 @@ class Project1Test(unittest.TestCase):
         self.ran = False
         self.port = random.randint(1025, 9999)
         self.tlsport = random.randint(1025, 9999)
-        print 'Using ports: %d,%d' % (self.port, self.tlsport)
+        print '\nUsing ports: %d,%d' % (self.port, self.tlsport)
 
 
     def pAssertEqual(self, arg1, arg2):
@@ -108,6 +108,14 @@ class Project1Test(unittest.TestCase):
         print port
         return port
 
+    def get_tls_port(self):
+        tls_port = self.tls_port
+        text = raw_input('tls_port? ').strip()
+        if text: tls_port = int(text)
+        self.tls_port = tls_port
+        print tls_port
+        return tls_port
+
     def find_path(self, name, tree, path='./', d=0):
         if d == 15: return None
         name = name.lower().strip()
@@ -151,6 +159,7 @@ class Project1Test(unittest.TestCase):
         path = self.get_path()
         liso = self.liso_name()
         port = self.get_port()
+        tls_port = self.get_tls_port()
         if not path: path = self.find_path('Makefile', tree)
         print 'switching to: %s' % path
         os.chdir(path)
@@ -158,7 +167,7 @@ class Project1Test(unittest.TestCase):
         check_output('make')
         self.ran = True
         resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-        cmd = 'nohup %s %d 4443 %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
+        cmd = 'nohup %s %d %d %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, tls_port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
         self.pAssertEqual(0, os.system(cmd))
         return liso
 
@@ -350,15 +359,15 @@ class Project1Grader(object):
     def prepareTestSuite(self):
     
         self.suite = unittest.TestSuite()
-        #self.suite.addTest(Project1Test('test_tag_checkpoint', self))
-        #self.suite.addTest(Project1Test('test_timestamp', self))
-        #self.suite.addTest(Project1Test('test_readme_file', self))
-        #self.suite.addTest(Project1Test('test_tests_file', self))
-        #self.suite.addTest(Project1Test('test_vulnerabilities_file', self))
-        #self.suite.addTest(Project1Test('test_Makefile_file', self))
-        #self.suite.addTest(Project1Test('test_inspect_source', self))
-        #self.suite.addTest(Project1Test('test_lisod_file', self))
-        #self.suite.addTest(Project1Test('test_replays', self))
+        self.suite.addTest(Project1Test('test_tag_checkpoint', self))
+        self.suite.addTest(Project1Test('test_timestamp', self))
+        self.suite.addTest(Project1Test('test_readme_file', self))
+        self.suite.addTest(Project1Test('test_tests_file', self))
+        self.suite.addTest(Project1Test('test_vulnerabilities_file', self))
+        self.suite.addTest(Project1Test('test_Makefile_file', self))
+        self.suite.addTest(Project1Test('test_inspect_source', self))
+        self.suite.addTest(Project1Test('test_lisod_file', self))
+        self.suite.addTest(Project1Test('test_replays', self))
 
     def runTests(self):
         print '\n\n----- Testing: %s -----' % (self.root_repo)
