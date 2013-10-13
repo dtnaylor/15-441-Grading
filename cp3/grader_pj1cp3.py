@@ -4,8 +4,8 @@ import sys
 
 sys.path.append('../common')
 
-import datetime, hashlib, time, os
-from subprocess import Popen
+import datetime, hashlib, time, os, requests
+from subprocess import Popen, check_call
 from grader_super import Project1Grader, Project1Test
 from plcommon import check_output
 
@@ -14,10 +14,17 @@ USAGE =\
 
 TMP_DIR = '/tmp/cp3/'
 CP3_CHECKER = os.getcwd() + '/cp3_checker.py'
+CP3_DIR = os.getcwd()
 DUE_DATE = datetime.datetime(2013, 10, 8, 23, 59, 59)
 SOURCE_REMINDER = '''\n\n(1) Ensure OpenSSL, fork, execve\n
 (2) Check documentation\n
 (3) Check readability/modularity'''
+BAD_POST_DATA = 'asldksjdklfjaskldfjlksdjgjksdhfjkgdhjkfshcvkljsdclkmzxvm,xcnm,vnsdilfuodghiouwerhfguiohsdiourghiousdrhguio'
+TEST_DOMAIN = 'https://dnaylor.no-ip.biz'
+SIGNER_CERT = os.getcwd() + '/../common/signer.crt'
+FLASKR_LOGIN_STRING = '<li><em>Unbelievable.  No entries here so far</em>'
+FLASKR_USER_DATA = 'username=admin&password=default'
+FLASKR_LOGGED_IN_STRING = '<div class=flash>You were logged in</div>'
 
 class Checkpoint3Test(Project1Test):
 
@@ -36,42 +43,37 @@ class Checkpoint3Test(Project1Test):
     def lisod_start(self):
         commit = self.resolve_tag()
         name = self.run_lisod(commit.tree)
-        time.sleep(3)
+        time.sleep(1)
+
+    # test replay.test and replay.out up to snuff
+    def test_replay_files(self):
+        self.print_str('\n\n----- Testing replay.[test|out] files -----')
+        commit = self.resolve_tag()
+        tree = commit.tree
+        print '\n----- replay.test -----'
+        test = self.find_file('replay.test', tree)
+        out = self.find_file('replay.out', tree)
+        print test.data.replace('\n','\\n\n').replace('\r','\\r'),
+        print '\n----- replay.out -----'
+       	print out.data.replace('\n','\\n\n').replace('\r','\\r'),
+        self.confirm()
+        self.edit_notes('REPLAY FILES:')
         
-       
-    def test_browserTLS(self):
-        print '----- Testing TLS Browser -----'
+    def test_pipelining(self):
+        print '----- Testing pipelining -----'
         self.lisod_start()
-        check_call(['firefox', 'https://127.0.0.1:%d/index.html' % (self.grader.tls_port)])
-        self.confirm()
-        self.edit_notes('TLS BROWSER:')
-
-
-    def test_blog(self):
-        print '----- Testing Blog -----'
-        self.lisod_start()
-        check_call(['firefox', 'http://127.0.0.1:%d/cgi/' % (self.grader.port)])
-        self.confirm()
-        self.edit_notes('BLOG TEST:')
-
-    def test_cgi(self):
-        print '----- Testing CGI -----'
-        self.lisod_start()
-        check_call(['firefox', 'http://127.0.0.1:%d/cgi/' % (self.grader.port)])
-        self.confirm()
-        self.edit_notes('CGI TEST:')
+        cmd = 'ncat -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-keepalive.get'
+        self.pAssertEqual(256, os.system(cmd % (self.port)))
+        cmd = 'ncat -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-close.get'
+        self.pAssertEqual(0, os.system(cmd % (self.port)))
 
     def test_pipeliningTLS(self):
         print '----- Testing TLS pipelining -----'
         self.lisod_start()
-        cmd = 'ncat --ssl -i 1s 127.0.0.1 %d < ./pipelining.get'
-        self.assertEqual(512, os.system(cmd % (self.grader.tls_port)))
-
-    def test_pipelining(self):
-        print '----- Testing pipelining -----'
-        self.lisod_start()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < ./pipelining.get'
-        self.assertEqual(512, os.system(cmd % (self.grader.port)))
+        cmd = 'ncat --ssl -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-keepalive.get'
+        self.pAssertEqual(256, os.system(cmd % (self.tls_port)))
+        cmd = 'ncat --ssl -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-close.get'
+        self.pAssertEqual(0, os.system(cmd % (self.tls_port)))
 
     def test_invalidPUT(self):
         print '----- Testing Bad PUT -----'
@@ -88,20 +90,66 @@ class Checkpoint3Test(Project1Test):
         self.lisod_start()
         for test in tests:
             root,ext = os.path.splitext(test)
-            response = requests.put(test % self.grader.port, timeout=10.0)
-            self.assertEqual(501, response.status_code)
+            response = requests.put(test % self.port, timeout=10.0)
+            self.pAssertEqual(501, response.status_code)
 
     def test_invalidLENGTH(self):
         print '----- Testing Bad Length Post -----'
         self.lisod_start()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < ./bad.post'
-        self.assertEqual(512, os.system(cmd % (self.grader.port)))
+        s = requests.Session()
+        prepped = requests.Request('POST', 'http://127.0.0.1:%d/cgi/' % self.port, data=BAD_POST_DATA, headers={'Connection':'Close'}).prepare()
+        prepped.headers['Content-Length'] = -1000
+        response = s.send(prepped, timeout=10.0)
+        print response.status_code
+        reasonable_codes = [400, 411, 413]
+        self.pAssertEqual(True, response.status_code in reasonable_codes)
 
     def test_invalidEND(self):
         print '----- Testing Bad Ending GET -----'
         self.lisod_start()
-        cmd = 'ncat -i 1s 127.0.0.1 %d < ./bad.get'
-        self.assertEqual(256, os.system(cmd % (self.grader.port)))
+        s = requests.Session()
+        prepped = requests.Request('GET', 'http://127.0.0.1:%d/index.html' % self.port, data=BAD_POST_DATA, headers={'Conn\r\n\r\nection':'Cl\r\nwose'}).prepare()
+        response = s.send(prepped, timeout=1.0)
+        print response.status_code
+        # print response.text
+        self.pAssertEqual(400, response.status_code)
+
+    def test_browser(self):
+        self.print_str('----- Testing Browser -----')
+        self.lisod_start()
+        response = requests.get('http://127.0.0.1:%d/index.html' % (self.port), timeout=1.0)
+        self.pAssertEqual(200, response.status_code)
+
+    def test_browserTLS(self):
+        print '----- Testing TLS Browser -----'
+        self.lisod_start()
+        response = requests.get('%s:%d/index.html' % (TEST_DOMAIN, self.tls_port), verify=SIGNER_CERT, timeout=1.0)
+        self.pAssertEqual(200, response.status_code)
+
+    def test_cgi(self):
+        print '----- Testing CGI -----'
+        self.lisod_start()
+        response = requests.get('http://127.0.0.1:%d/cgi/' % (self.port), timeout=1.0)
+        self.pAssertEqual(200, response.status_code)
+        rm = [l for l in response.text.split('\n') if 'REQUEST_METHOD' in l][0]
+        method = rm.split('<DD>')[1].strip()
+        self.pAssertEqual('GET', method)
+       
+    def test_blog(self):
+        print '----- Testing Blog -----'
+        self.change_cgi(self.grader.tmp_dir + 'cgi/wsgi_wrapper.py')
+        self.lisod_start()
+        response = requests.get('http://127.0.0.1:%d/cgi/' % (self.port), timeout=3.0)
+        self.pAssertEqual(200, response.status_code)
+        login = [l for l in response.text.split('\n') if 'No entries' in l][0].strip()
+        self.pAssertEqual(FLASKR_LOGIN_STRING, login)
+
+        s = requests.Session()
+        prepped = requests.Request('POST', 'http://127.0.0.1:%d/cgi/login' % self.port, data=FLASKR_USER_DATA, headers={'Content-Type':'application/x-www-form-urlencoded'}).prepare()
+        response = s.send(prepped, timeout = 3.0)
+        self.pAssertEqual(200, response.status_code)
+        login = [l for l in response.text.split('\n') if 'were logged in' in l][0].strip()
+        self.pAssertEqual(FLASKR_LOGGED_IN_STRING, login)
 
 
 class Checkpoint3Grader(Project1Grader):
@@ -112,23 +160,25 @@ class Checkpoint3Grader(Project1Grader):
 
 
     def prepareTestSuite(self):
-        #super(Checkpoint3Grader, self).prepareTestSuite()
-        #self.suite.addTest(Checkpoint3Test('test_replay_files', self))
-        #self.suite.addTest(Checkpoint3Test('test_headers', self))
-        #self.suite.addTest(Checkpoint3Test('test_HEAD', self))
-        # self.suite.addTest(Checkpoint3Test('test_GET', self))
-        # self.suite.addTest(Checkpoint3Test('test_POST', self))
-        #self.suite.addTest(Checkpoint3Test('test_pipelining', self))
-        #self.suite.addTest(Checkpoint3Test('test_pipeliningTLS', self))
-        #self.suite.addTest(Checkpoint3Test('test_browserTLS', self))
-        #self.suite.addTest(Checkpoint3Test('test_invalidPUT', self))
-        #self.suite.addTest(Checkpoint3Test('test_invalidLENGTH', self))
-        #self.suite.addTest(Checkpoint3Test('test_invalidEND', self))
-        #self.suite.addTest(Checkpoint3Test('test_browser', self))
-        #self.suite.addTest(Checkpoint3Test('test_cgi', self))
-        #self.suite.addTest(Checkpoint3Test('test_blog', self))
-        #self.suite.addTest(Checkpoint3Test('test_bw', self))
-
+        super(Checkpoint3Grader, self).prepareTestSuite()
+        # Shared with CP2
+        self.suite.addTest(Checkpoint3Test('test_HEAD_headers', self))
+        self.suite.addTest(Checkpoint3Test('test_HEAD', self))
+        self.suite.addTest(Checkpoint3Test('test_GET', self))
+        self.suite.addTest(Checkpoint3Test('test_POST', self))
+        self.suite.addTest(Checkpoint3Test('test_bw', self))
+        
+        # CP3 specific
+        self.suite.addTest(Checkpoint3Test('test_replay_files', self))
+        self.suite.addTest(Checkpoint3Test('test_pipelining', self))
+        self.suite.addTest(Checkpoint3Test('test_pipeliningTLS', self))
+        self.suite.addTest(Checkpoint3Test('test_invalidPUT', self))
+        self.suite.addTest(Checkpoint3Test('test_invalidLENGTH', self))
+        self.suite.addTest(Checkpoint3Test('test_invalidEND', self))
+        self.suite.addTest(Checkpoint3Test('test_browser', self))
+        self.suite.addTest(Checkpoint3Test('test_browserTLS', self))
+        self.suite.addTest(Checkpoint3Test('test_cgi', self))
+        self.suite.addTest(Checkpoint3Test('test_blog', self))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
