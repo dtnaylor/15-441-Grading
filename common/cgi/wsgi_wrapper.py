@@ -12,6 +12,27 @@ import os, sys
 # From Flask: http://flask.pocoo.org/docs/quickstart/
 ############### BEGIN FLASK QUICKSTART ##############
 from sqlite3 import dbapi2 as sqlite3
+
+ALLDIRS = [os.path.expanduser("~") + '/flask_env/lib/python2.6/site-packages']
+
+import sys 
+import site 
+
+# Remember original sys.path.
+prev_sys_path = list(sys.path) 
+
+# Add each new site-packages directory.
+for directory in ALLDIRS:
+    site.addsitedir(directory)
+
+# Reorder sys.path so new directories at the front.
+new_sys_path = [] 
+for item in list(sys.path): 
+    if item not in prev_sys_path: 
+        new_sys_path.append(item) 
+        sys.path.remove(item) 
+        sys.path[:0] = new_sys_path 
+
 from flask import Flask, request, session, g, redirect, url_for, abort, \
      render_template, flash
 
