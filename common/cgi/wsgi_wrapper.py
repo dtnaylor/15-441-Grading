@@ -138,7 +138,7 @@ def run_with_cgi(application):
                  status, response_headers = headers_sent[:] = headers_set
                  http_version = environ.get('SERVER_PROTOCOL', 'HTTP/1.1')
                  http_connection = environ.get('HTTP_CONNECTION','close')
-                 #sys.stdout.write('%s %s\r\n' % (http_version, status))
+                 sys.stdout.write('%s %s\r\n' % (http_version, status))
                  #f.write('%s %s\r\n' % (http_version, status))
                  sys.stdout.write('Connection: %s\r\n' % (http_connection))
                  f.write('Connection: %s\r\n' % (http_connection))
