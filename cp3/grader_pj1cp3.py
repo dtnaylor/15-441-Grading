@@ -60,7 +60,7 @@ class Checkpoint3Test(Project1Test):
         self.edit_notes('REPLAY FILES:')
         
     def test_pipelining(self):
-        print '----- Testing pipelining -----'
+        self.print_str('----- Testing pipelining -----')
         self.lisod_start()
         cmd = 'ncat -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-keepalive.get'
         self.pAssertEqual(256, os.system(cmd % (self.port)))
@@ -68,7 +68,7 @@ class Checkpoint3Test(Project1Test):
         self.pAssertEqual(0, os.system(cmd % (self.port)))
 
     def test_pipeliningTLS(self):
-        print '----- Testing TLS pipelining -----'
+        self.print_str('----- Testing TLS pipelining -----')
         self.lisod_start()
         cmd = 'ncat --ssl -i 1s 127.0.0.1 %d > /dev/null < ' + CP3_DIR + '/pipelining-keepalive.get'
         self.pAssertEqual(256, os.system(cmd % (self.tls_port)))
@@ -76,7 +76,7 @@ class Checkpoint3Test(Project1Test):
         self.pAssertEqual(0, os.system(cmd % (self.tls_port)))
 
     def test_invalidPUT(self):
-        print '----- Testing Bad PUT -----'
+        self.print_str('----- Testing Bad PUT -----')
         tests = {
             'http://127.0.0.1:%d/index.html' : 
             'f5cacdcb48b7d85ff48da4653f8bf8a7c94fb8fb43407a8e82322302ab13becd',
@@ -94,7 +94,7 @@ class Checkpoint3Test(Project1Test):
             self.pAssertEqual(501, response.status_code)
 
     def test_invalidLENGTH(self):
-        print '----- Testing Bad Length Post -----'
+        self.print_str('----- Testing Bad Length Post -----')
         self.lisod_start()
         s = requests.Session()
         prepped = requests.Request('POST', 'http://127.0.0.1:%d/cgi/' % self.port, data=BAD_POST_DATA, headers={'Connection':'Close'}).prepare()
@@ -105,7 +105,7 @@ class Checkpoint3Test(Project1Test):
         self.pAssertEqual(True, response.status_code in reasonable_codes)
 
     def test_invalidEND(self):
-        print '----- Testing Bad Ending GET -----'
+        self.print_str('----- Testing Bad Ending GET -----')
         self.lisod_start()
         s = requests.Session()
         prepped = requests.Request('GET', 'http://127.0.0.1:%d/index.html' % self.port, data=BAD_POST_DATA, headers={'Conn\r\n\r\nection':'Cl\r\nwose'}).prepare()
@@ -121,13 +121,13 @@ class Checkpoint3Test(Project1Test):
         self.pAssertEqual(200, response.status_code)
 
     def test_browserTLS(self):
-        print '----- Testing TLS Browser -----'
+        self.print_str('----- Testing TLS Browser -----')
         self.lisod_start()
         response = requests.get('%s:%d/index.html' % (TEST_DOMAIN, self.tls_port), verify=SIGNER_CERT, timeout=1.0)
         self.pAssertEqual(200, response.status_code)
 
     def test_cgi(self):
-        print '----- Testing CGI -----'
+        self.print_str('----- Testing CGI -----')
         self.lisod_start()
         response = requests.get('http://127.0.0.1:%d/cgi/' % (self.port), timeout=1.0)
         self.pAssertEqual(200, response.status_code)
@@ -136,7 +136,7 @@ class Checkpoint3Test(Project1Test):
         self.pAssertEqual('GET', method)
        
     def test_blog(self):
-        print '----- Testing Blog -----'
+        self.print_str('----- Testing Blog -----')
         self.change_cgi(self.grader.tmp_dir + 'cgi/wsgi_wrapper.py')
         self.lisod_start()
         response = requests.get('http://127.0.0.1:%d/cgi/' % (self.port), timeout=3.0)
