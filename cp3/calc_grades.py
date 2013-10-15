@@ -177,7 +177,7 @@ for results_file in os.listdir(RESULTS_DIR):
     ##
     ##  Deal with late submissions
     ##
-    timestamp_str = 'TIMESTAMP: %s' % timestamp
+    timestamp_str = '%s' % timestamp
     if 'Late' in results:
         timestamp_str += '  (%d day(s) late)' % results['Late']
     else:
