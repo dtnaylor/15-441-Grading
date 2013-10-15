@@ -73,6 +73,8 @@ TESTS = {
     'Checkpoint 2':10
 }
 
+DROPPED_TESTS = ['CGI']
+
 def total_possible():
     total = 0
     for test in TESTS:
@@ -130,8 +132,10 @@ for results_file in os.listdir(RESULTS_DIR):
             if line.strip() == 'ok' or line.strip() == 'failed':
                 # We don't care about tests that aren't in the TESTS dict
                 if current_test in TESTS:
-                    # all or nothing: ok => max points, failed => 0
-                    results[current_test] = TESTS[current_test] if line.strip() == 'ok' else 0
+                    if current_test in DROPPED_TESTS:  # full points
+                        results[current_test] = TESTS[current_test]
+                    else:  # all or nothing: ok => max points, failed => 0
+                        results[current_test] = TESTS[current_test] if line.strip() == 'ok' else 0
     resultsf.closed
 
 
