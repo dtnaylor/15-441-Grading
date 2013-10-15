@@ -4,7 +4,7 @@ import sys
 
 sys.path.append('../common')
 
-import datetime, hashlib, time, os, requests
+import datetime, hashlib, time, os, requests, unittest
 from subprocess import Popen, check_call
 from grader_super import Project1Grader, Project1Test
 from plcommon import check_output
@@ -43,7 +43,7 @@ class Checkpoint3Test(Project1Test):
     def lisod_start(self):
         commit = self.resolve_tag()
         name = self.run_lisod(commit.tree)
-        time.sleep(1)
+        time.sleep(3)
 
     # test replay.test and replay.out up to snuff
     def test_replay_files(self):
@@ -153,13 +153,19 @@ class Checkpoint3Test(Project1Test):
 
 
 class Checkpoint3Grader(Project1Grader):
-    def __init__(self, andrewid):
+    def __init__(self, andrewid, tests):
         super(Checkpoint3Grader, self).__init__(andrewid, 3, DUE_DATE, SOURCE_REMINDER)
         self.editor = 'emacs -nw'
         self.moss_dir = os.path.join(self.tmp_dir, 'moss')
+        self.tests = tests
 
 
     def prepareTestSuite(self):
+        if self.tests:
+            self.suite = unittest.TestSuite()
+            for t in tests:
+                self.suite.addTest(Checkpoint3Test(t, self))
+            return
         super(Checkpoint3Grader, self).prepareTestSuite()
         # Shared with CP2
         self.suite.addTest(Checkpoint3Test('test_HEAD_headers', self))
@@ -185,7 +191,8 @@ if __name__ == '__main__':
         print USAGE % sys.argv[0]
         exit(1)
 
-    grader = Checkpoint3Grader(sys.argv[1])
+    tests = sys.argv[2:]
+    grader = Checkpoint3Grader(sys.argv[1], tests)
     grader.prepareTestSuite()
     grader.runTests()
 
