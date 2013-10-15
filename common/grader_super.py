@@ -9,6 +9,7 @@ import time
 import hashlib
 import random
 import requests
+import socket
 from subprocess import Popen, check_call
 from plcommon import check_output, check_both
 
@@ -179,7 +180,9 @@ class Project1Test(unittest.TestCase):
         check_output('make')
         self.ran = True
         resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-        cmd = 'nohup %s %d %d %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, tls_port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
+        cmd = '%s %d %d %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, tls_port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
+        #cmd = 'nohup ' + cmd
+        cmd = cmd + " > /dev/null"
         print cmd
         self.pAssertEqual(0, os.system(cmd))
         return liso
