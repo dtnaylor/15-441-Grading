@@ -10,6 +10,7 @@ import hashlib
 import random
 import requests
 import socket
+import getpass
 from subprocess import Popen, check_call
 from plcommon import check_output, check_both
 
@@ -133,39 +134,41 @@ class Project1Test(unittest.TestCase):
         if d == 15: return None
         name = name.lower().strip()
 
-        # depth first...?
+        # bredth first...?
         for entry in tree:
+            if entry.name.lower().strip() == name:
+                return path
+
+        # now check depth...?
+        entries = [e for e in tree]
+        for entry in reversed(entries):
             obj = self.repository[entry.oid]
             if isinstance(obj, Tree):
                 obj = self.find_path(name, obj, os.path.join(path, entry.name), d+1)
                 if obj:
                     return obj
-
-        # now check this level...?
-        for entry in tree:
-            if entry.name.lower().strip() == name:
-                return path
         return None
 
     def find_file(self, name, tree, d=0):
         if d == 15: return None
         name = name.lower().strip()
 
-        # depth first...?
-        for entry in tree:
-            obj = self.repository[entry.oid]
-            if isinstance(obj, Tree):
-                obj = self.find_file(name, obj, d+1)
-                if obj:
-                    return obj
-
-        # now check this level...?
+        # bredth first...?
         for entry in tree:
             if entry.name.lower().strip() == name:
                 resolved = self.repository[entry.oid]
                 if not isinstance(resolved, Blob):
                     continue
                 return resolved
+
+        # now check depth...?
+        entries = [e for e in tree]
+        for entry in reversed(entries):
+            obj = self.repository[entry.oid]
+            if isinstance(obj, Tree):
+                obj = self.find_file(name, obj, d+1)
+                if obj:
+                    return obj
         return None
 
     def run_lisod(self, tree):
@@ -180,9 +183,9 @@ class Project1Test(unittest.TestCase):
         check_output('make')
         self.ran = True
         resource.setrlimit(resource.RLIMIT_STACK, (resource.RLIM_INFINITY, resource.RLIM_INFINITY))
-        cmd = '%s %d %d %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, tls_port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www, self.grader.cgi, self.grader.priv_key, self.grader.cert)
+        cmd = '%s %d %d %slisod.log %slisod.lock %s %s %s %s&' % (liso, port, tls_port, self.grader.tmp_dir, self.grader.tmp_dir, self.grader.www[:-1], self.grader.cgi, self.grader.priv_key, self.grader.cert)
         #cmd = 'nohup ' + cmd
-        cmd = cmd + " > /dev/null"
+        #cmd = cmd + " > /dev/null"
         print cmd
         self.pAssertEqual(0, os.system(cmd))
         return liso
@@ -206,6 +209,7 @@ class Project1Test(unittest.TestCase):
                 tag = self.repository.lookup_reference('refs/tags/checkpoint_%d' % self.grader.cp_num)
             except KeyError:
                 tag = self.repository.lookup_reference('refs/tags/checkpoint%d' % self.grader.cp_num)
+        #tag = self.repository.lookup_reference('refs/tags/regrade')
         commit = self.repository[tag.target]
         while isinstance(commit, Tag): commit = self.repository[commit.target]
         return commit
@@ -487,7 +491,7 @@ class Project1Grader(object):
         self.andrewid = andrewid
         self.cp_num = cp_num
         self.root_repo = ROOT_REPO_TEMPLATE % (andrewid, andrewid)
-        self.tmp_dir = '/tmp/cp%d/' % self.cp_num
+        self.tmp_dir = '/tmp/%s/cp%d/' % (getpass.getuser(), self.cp_num)
         self.due_date = due_date
         self.source_reminder = source_reminder
         self.notes = os.path.join(self.tmp_dir, '%s-cp%d.notes' % (self.andrewid, self.cp_num))

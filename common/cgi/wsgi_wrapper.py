@@ -17,6 +17,11 @@ ALLDIRS = [os.path.expanduser("~") + '/flask_env/lib/python2.6/site-packages']
 
 import sys 
 import site 
+import getpass
+
+TMP_DIR = '/tmp/' + getpass.getuser()
+if not os.path.exists(TMP_DIR):
+    os.makedirs(TMP_DIR)
 
 # Remember original sys.path.
 prev_sys_path = list(sys.path) 
@@ -42,7 +47,7 @@ app = Flask(__name__)
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
-    DATABASE='/tmp/flaskr.db',
+    DATABASE=TMP_DIR + '/flaskr.db',
     DEBUG=True,
     SECRET_KEY='development key',
     USERNAME='admin',
@@ -85,7 +90,7 @@ def close_db(error):
 
 @app.route('/')
 def show_entries():
-    with open('/tmp/vars.out', 'w') as f:
+    with open(TMP_DIR + '/vars.out', 'w') as f:
         f.write('%s' % os.environ)
     f.closed
     db = get_db()
@@ -150,7 +155,7 @@ def run_with_cgi(application):
     headers_sent = []
 
     def write(data):
-        with open('/tmp/response.out', 'a') as f:
+        with open(TMP_DIR + '/response.out', 'a') as f:
             if not headers_set:
                  raise AssertionError("write() before start_response()")
 
