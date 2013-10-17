@@ -70,7 +70,14 @@ TESTS = {
     # CHECKPOINTS  (20 pts)
     #
     'Checkpoint 1':10,
-    'Checkpoint 2':10
+    'Checkpoint 2':10,
+
+    #
+    # LATE PENALTIES  (0 pts)
+    #
+    'CP1-Late-Penalty':0,
+    'CP2-Late-Penalty':0,
+    'CP3-Late-Penalty':0
 }
 
 DROPPED_TESTS = ['CGI']
